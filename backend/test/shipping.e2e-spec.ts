@@ -244,6 +244,14 @@ describe('Frete, endereços e envio', () => {
       expect(mine.body).not.toHaveProperty('shipmentId');
     });
 
+    it('não repassa link de impressão que não seja https', async () => {
+      const { admin, orderId } = await paidOrder();
+      await admin.post(`/admin/orders/${orderId}/label`).expect(200);
+      ctx.melhorEnvio.printUrl = async () => 'javascript:alert(document.cookie)';
+      const res = await admin.post(`/admin/orders/${orderId}/label/print`).expect(502);
+      expect(JSON.stringify(res.body)).not.toContain('javascript:');
+    });
+
     it('sem CNPJ: seguro limitado a R$ 1.000; com CNPJ: valor total', () => {
       expect(insuredValue(3799.9)).toBe(1000);
       expect(insuredValue(250.5)).toBe(250.5);

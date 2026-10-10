@@ -39,8 +39,9 @@ export class ReviewsService {
     });
   }
 
-  findByProduct(productId: string) {
-    return this.prisma.review.findMany({
+  // Rota pública: o nome completo de quem comprou não sai do servidor, só "Ana S.".
+  async findByProduct(productId: string) {
+    const reviews = await this.prisma.review.findMany({
       where: { productId },
       select: {
         id: true,
@@ -51,15 +52,25 @@ export class ReviewsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return reviews.map((r) => ({ ...r, user: { name: displayName(r.user.name) } }));
   }
 
-  async remove(id: string, userId: string, role: string) {
+  // Só o autor apaga pela rota de cliente. Moderação é pelo painel (DELETE /admin/reviews/:id),
+  // que exige a verificação em duas etapas e fica na auditoria.
+  async remove(id: string, userId: string) {
     const review = await this.prisma.review.findUnique({ where: { id } });
     if (!review) throw new NotFoundException('Avaliação não encontrada');
-    if (review.userId !== userId && role !== 'ADMIN') {
+    if (review.userId !== userId) {
       throw new ForbiddenException('Acesso negado');
     }
     await this.prisma.review.delete({ where: { id } });
     return { deleted: true };
   }
+}
+
+/** "Ana Souza Lima" → "Ana L."; um nome só fica como está. */
+export function displayName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? '';
+  return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
 }

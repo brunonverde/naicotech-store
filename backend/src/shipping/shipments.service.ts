@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   Injectable,
@@ -27,6 +28,15 @@ const LABEL_STUCK_MS = 5 * 60 * 1000;
 
 export const trackingUrl = (code: string) =>
   `https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(code)}`;
+
+export function isHttpsUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 @Injectable()
 export class ShipmentsService implements OnModuleInit, OnModuleDestroy {
@@ -162,7 +172,13 @@ export class ShipmentsService implements OnModuleInit, OnModuleDestroy {
     if (!order?.shipmentId || order.shipmentStatus === LABEL_PROCESSING) {
       throw new BadRequestException('Gere a etiqueta antes de imprimir');
     }
-    return { url: await this.melhorEnvio.printUrl(order.shipmentId) };
+    const url = await this.melhorEnvio.printUrl(order.shipmentId);
+    // O painel abre esse link direto: só https (nada de javascript:, data: etc.).
+    if (!isHttpsUrl(url)) {
+      this.logger.error(`Melhor Envio devolveu uma URL de impressão inválida para o pedido ${orderId}`);
+      throw new BadGatewayException('O Melhor Envio devolveu um link de impressão inválido. Tente de novo.');
+    }
+    return { url };
   }
 
   /** Consulta o Melhor Envio e avança os pedidos postados/entregues, avisando o cliente. */

@@ -52,6 +52,13 @@ export class AdminService {
     return this.prisma.order.findUniqueOrThrow({ where: { id } });
   }
 
+  // Moderação: apaga a avaliação de qualquer cliente (rota com 2FA e auditoria).
+  async deleteReview(id: string) {
+    const { count } = await this.prisma.review.deleteMany({ where: { id } });
+    if (count === 0) throw new NotFoundException('Avaliação não encontrada');
+    return { deleted: true };
+  }
+
   // O painel mostra o IP só mascarado; o completo fica criptografado no banco
   // para investigar um incidente, se preciso (veja docs/SEGURANCA.md).
   async auditLog() {

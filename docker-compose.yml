@@ -9,7 +9,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432"
+      # Só nesta máquina: na rede local, o banco ficaria exposto.
+      - "127.0.0.1:5433:5432"
     volumes:
       - naicotech_pg_data:/var/lib/postgresql/data
 
@@ -19,8 +20,9 @@ services:
     container_name: naicotech-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      # Só nesta máquina: o Mailpit não tem senha e guarda os links de redefinição de senha.
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
 
 volumes:
   naicotech_pg_data:

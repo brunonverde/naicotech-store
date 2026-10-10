@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -144,6 +145,12 @@ export class AdminController {
   @AdminOnly()
   updateOrderStatus(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.admin.updateOrderStatus(id, dto.status);
+  }
+
+  @Delete('reviews/:id')
+  @AdminOnly()
+  deleteReview(@Param('id', ParseUUIDPipe) id: string) {
+    return this.admin.deleteReview(id);
   }
 
   // ---------- Envio (Melhor Envio) ----------

@@ -96,6 +96,8 @@ export function OrdersTab() {
   const printLabel = (order: AdminOrder) =>
     run(order.id, async () => {
       const { url } = await guard(adminApi.printLabel(order.id))
+      // O backend já valida, mas o link vem de terceiro: só abre se for https.
+      if (new URL(url, window.location.href).protocol !== 'https:') throw new Error('Link de impressão inválido.')
       window.open(url, '_blank', 'noopener,noreferrer')
     })
 
