@@ -130,6 +130,19 @@ export class MailService {
     });
   }
 
+  sendAccountDeleted(to: string, name: string) {
+    return this.send({
+      to,
+      name,
+      subject: 'Sua conta foi excluída - NaicoTech Store',
+      paragraphs: [
+        'Sua conta na NaicoTech Store foi excluída, como você pediu. Apagamos seus dados pessoais, endereços e avaliações.',
+        'Os pedidos antigos continuam registrados sem nenhum dado que identifique você, porque a loja é obrigada a guardá-los para fins fiscais.',
+      ],
+      footer: 'Se você não pediu a exclusão, responda este e-mail imediatamente.',
+    });
+  }
+
   private async send(email: ActionEmail) {
     const safeName = escapeHtml(email.name);
     const text = [

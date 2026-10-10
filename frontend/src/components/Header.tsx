@@ -89,6 +89,9 @@ export function Header() {
                 <div className="account-text">
                   <span className="muted small">Olá, {user.name.split(' ')[0]}</span>
                   <div className="account-links">
+                    <NavLink to="/conta">
+                      <User size={14} aria-hidden="true" /> Conta
+                    </NavLink>
                     <NavLink to="/pedidos">
                       <Package size={14} aria-hidden="true" /> Pedidos
                     </NavLink>

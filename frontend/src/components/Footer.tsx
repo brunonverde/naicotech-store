@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Cpu, CreditCard, Lock, ShieldCheck } from 'lucide-react'
+import { STORE } from '../config/store'
 
 const YEAR = new Date().getFullYear()
 
@@ -44,6 +45,23 @@ export function Footer() {
             <li>
               <Link to="/esqueci-senha">Esqueci minha senha</Link>
             </li>
+            <li>
+              <Link to="/conta">Minha conta e meus dados</Link>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h3>Institucional</h3>
+          <ul>
+            <li>
+              <Link to="/privacidade">Política de Privacidade</Link>
+            </li>
+            <li>
+              <Link to="/termos">Termos de Uso</Link>
+            </li>
+            <li>
+              <Link to="/trocas">Trocas e devoluções</Link>
+            </li>
           </ul>
         </div>
         <div>
@@ -62,7 +80,14 @@ export function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        <div className="container">© {YEAR} NaicoTech Store. Todos os direitos reservados.</div>
+        <div className="container footer-legal">
+          <span>© {YEAR} NaicoTech Store. Todos os direitos reservados.</span>
+          <span>
+            {STORE.legalName ?? (STORE.demo ? 'Loja demonstrativa: projeto de portfólio' : STORE.name)}
+            {STORE.document && ` · CNPJ/CPF ${STORE.document}`}
+            {STORE.address && ` · ${STORE.address}`}
+          </span>
+        </div>
       </div>
     </footer>
   )

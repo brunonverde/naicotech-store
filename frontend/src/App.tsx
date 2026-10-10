@@ -18,6 +18,9 @@ import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { AdminPage } from './pages/admin/AdminPage'
+import { AccountPage } from './pages/AccountPage'
+import { PrivacyPage, ReturnsPage, TermsPage } from './pages/LegalPages'
+import { DemoNotice } from './components/DemoNotice'
 
 export default function App() {
   return (
@@ -25,6 +28,7 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <ToastProvider>
+          <DemoNotice />
           <Header />
           <main className="container main">
             <RouteErrorBoundary>
@@ -37,6 +41,17 @@ export default function App() {
               <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
               <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
               <Route path="/carrinho" element={<CartPage />} />
+              <Route path="/privacidade" element={<PrivacyPage />} />
+              <Route path="/termos" element={<TermsPage />} />
+              <Route path="/trocas" element={<ReturnsPage />} />
+              <Route
+                path="/conta"
+                element={
+                  <RequireAuth>
+                    <AccountPage />
+                  </RequireAuth>
+                }
+              />
               <Route
                 path="/pedidos"
                 element={

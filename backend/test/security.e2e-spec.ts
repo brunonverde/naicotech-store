@@ -63,7 +63,7 @@ describe('Proteções gerais', () => {
     it('limita cadastros em sequência', async () => {
       const statuses: number[] = [];
       for (let i = 0; i < 4; i++) {
-        const res = await ctx.http().post('/auth/register').send({ name: 'Bot', email: `bot${i}@teste.com`, password: PASSWORD });
+        const res = await ctx.http().post('/auth/register').send({ name: 'Bot', email: `bot${i}@teste.com`, password: PASSWORD, acceptTerms: true });
         statuses.push(res.status);
       }
       expect(statuses).toEqual([201, 201, 201, 429]);
@@ -89,7 +89,7 @@ describe('Proteções gerais', () => {
     it('recusa campos desconhecidos (ex.: tentar virar admin no cadastro)', async () => {
       await ctx.http()
         .post('/auth/register')
-        .send({ name: 'Ana', email: 'a@teste.com', password: PASSWORD, role: 'ADMIN' })
+        .send({ name: 'Ana', email: 'a@teste.com', password: PASSWORD, acceptTerms: true, role: 'ADMIN' })
         .expect(400);
     });
 

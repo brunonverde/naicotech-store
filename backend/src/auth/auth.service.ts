@@ -83,7 +83,7 @@ export class AuthService {
 
     try {
       const user = await this.prisma.user.create({
-        data: { name: dto.name.trim(), email, passwordHash },
+        data: { name: dto.name.trim(), email, passwordHash, termsAcceptedAt: new Date() },
       });
       await this.sendVerification(user.id, user.email, user.name);
     } catch (error) {

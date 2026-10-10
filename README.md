@@ -1,6 +1,8 @@
 # NaicoTech Store
 
-Loja virtual de hardware e acessórios. Frontend em React + Vite + TypeScript. Backend em NestJS + TypeScript + Prisma + PostgreSQL, pagamentos via Mercado Pago (Orders API).
+Loja virtual de hardware e acessórios. Frontend em React + Vite + TypeScript. Backend em NestJS + TypeScript + Prisma + PostgreSQL, pagamentos via Mercado Pago (Orders API) e frete via Melhor Envio (Correios, Jadlog e outras).
+
+> **Projeto de portfólio.** A loja roda em modo de demonstração (`VITE_DEMO_MODE=true`): pagamentos e frete em sandbox, sem vendas reais.
 
 ## Primeira execução (Windows / PowerShell)
 
@@ -17,6 +19,9 @@ Loja virtual de hardware e acessórios. Frontend em React + Vite + TypeScript. B
      ```
    - `MERCADOPAGO_ACCESS_TOKEN`: painel do Mercado Pago, credenciais de teste.
    - `MERCADOPAGO_WEBHOOK_SECRET`: ao configurar o webhook, copie a chave secreta (gere uma nova, a antiga estava no PC formatado).
+   - `TOTP_ENCRYPTION_KEY` e `ADDRESS_ENCRYPTION_KEY`: duas chaves **diferentes**, cada uma gerada com
+     `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+   - `MELHOR_ENVIO_TOKEN`: painel do Melhor Envio (sandbox) > Gerenciar > Tokens. `SHIPPING_ORIGIN_CEP` é o CEP de onde os pacotes saem; os dados `SHIPPING_SENDER_*` só são exigidos para gerar etiqueta.
 2. Suba o banco (Docker Desktop aberto):
    ```powershell
    docker compose up -d
@@ -70,6 +75,19 @@ Mais comandos do dia a dia: `COMANDOS.md`.
 - Preço e total vêm sempre do banco. Pedido não pago expira em 30 min e devolve o estoque; no máximo 3 pedidos pendentes por pessoa.
 - Trava contra cobrança dupla e chave de idempotência por tentativa.
 - Webhook: assinatura validada (com janela anti-replay), status consultado direto na API do Mercado Pago e valor pago conferido com o total do pedido.
+
+**Frete e endereços (LGPD)**
+- Frete sempre recotado no servidor ao criar o pedido; o preço mostrado no navegador não vale. Cotações em cache de 10 min (não esgota a API).
+- Endereço, CPF e telefone criptografados (AES-256-GCM, chave própria) e amarrados ao dono; a API só devolve versões mascaradas.
+- Endereço salvo só com consentimento; o do pedido é apagado 90 dias após a entrega. Admin vê o completo só sob demanda, com auditoria.
+- Sem CNPJ, o envio vai com declaração de conteúdo e seguro limitado a R$ 1.000; `SHIPPING_COMMERCIAL=true` ativa o modo com NF-e.
+
+**Direitos do titular**
+- Em "Minha conta" o cliente baixa todos os seus dados (JSON) e exclui a conta, sempre confirmando a senha.
+- A exclusão apaga dados pessoais, endereços e avaliações; pedidos ficam anônimos (obrigação fiscal).
+- Cadastro registra o aceite dos Termos e da Política de Privacidade. Páginas legais em `/privacidade`, `/termos` e `/trocas`.
+
+Detalhes, plano de resposta a incidentes e rotação de chaves: [`docs/SEGURANCA.md`](docs/SEGURANCA.md).
 
 **Antes de ir para produção**
 - HTTPS obrigatório, `NODE_ENV=production`, `TRUST_PROXY` conforme a hospedagem e credenciais de produção do Mercado Pago.

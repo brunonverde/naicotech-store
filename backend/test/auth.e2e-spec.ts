@@ -15,13 +15,13 @@ describe('Autenticação', () => {
 
   describe('cadastro e confirmação de e-mail', () => {
     it('não revela se o e-mail já existe e avisa o dono por e-mail', async () => {
-      const first = await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      const first = await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       expect(first.status).toBe(201);
 
       // Confirma a conta e tenta cadastrar de novo.
       const token = ctx.mail.tokenFrom('verification', EMAIL);
       await ctx.http().post('/auth/verify-email').send({ token }).expect(200);
-      const second = await ctx.http().post('/auth/register').send({ name: 'Outro', email: EMAIL, password: 'outraSenha1' });
+      const second = await ctx.http().post('/auth/register').send({ name: 'Outro', email: EMAIL, password: 'outraSenha1', acceptTerms: true });
 
       expect(second.status).toBe(201);
       expect(second.body).toEqual(first.body);
@@ -31,13 +31,13 @@ describe('Autenticação', () => {
     });
 
     it('não devolve dados sensíveis no cadastro', async () => {
-      const res = await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      const res = await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const body = JSON.stringify(res.body);
       expect(body).not.toMatch(/passwordHash|verificationToken|tokenVersion/);
     });
 
     it('guarda só o hash do token de confirmação no banco', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const token = ctx.mail.tokenFrom('verification', EMAIL);
       const user = await ctx.prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
       expect(user.verificationTokenHash).toBeTruthy();
@@ -46,14 +46,14 @@ describe('Autenticação', () => {
     });
 
     it('bloqueia login até confirmar o e-mail', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const res = await ctx.http().post('/auth/login').send({ email: EMAIL, password: PASSWORD });
       expect(res.status).toBe(403);
       expect(res.body.code).toBe('EMAIL_NOT_VERIFIED');
     });
 
     it('confirma o e-mail, abre a sessão em cookie httpOnly e o link só vale uma vez', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const token = ctx.mail.tokenFrom('verification', EMAIL);
 
       const res = await ctx.http().post('/auth/verify-email').send({ token }).expect(200);
@@ -68,7 +68,7 @@ describe('Autenticação', () => {
     });
 
     it('recusa link de confirmação expirado', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const token = ctx.mail.tokenFrom('verification', EMAIL);
       await ctx.prisma.user.update({
         where: { email: EMAIL },
@@ -78,7 +78,7 @@ describe('Autenticação', () => {
     });
 
     it('reenvio responde igual para e-mail existente e inexistente', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const a = await ctx.http().post('/auth/resend-verification').send({ email: EMAIL });
       const b = await ctx.http().post('/auth/resend-verification').send({ email: 'ninguem@teste.com' });
       expect(a.body).toEqual(b.body);
@@ -110,7 +110,7 @@ describe('Autenticação', () => {
     });
 
     it('sair invalida a sessão no servidor, não só no navegador', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       const token = ctx.mail.tokenFrom('verification', EMAIL);
       const verified = await ctx.http().post('/auth/verify-email').send({ token }).expect(200);
       // Cookie "roubado": uma cópia guardada antes do logout.
@@ -174,7 +174,7 @@ describe('Autenticação', () => {
     });
 
     it('redefinir a senha também confirma o e-mail de conta pendente', async () => {
-      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD });
+      await ctx.http().post('/auth/register').send({ name: 'Ana', email: EMAIL, password: PASSWORD, acceptTerms: true });
       await ctx.http().post('/auth/forgot-password').send({ email: EMAIL });
       const token = ctx.mail.tokenFrom('password-reset', EMAIL);
       await ctx.http().post('/auth/reset-password').send({ token, password: 'novaSenha456' }).expect(200);

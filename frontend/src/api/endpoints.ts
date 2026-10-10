@@ -24,10 +24,10 @@ export const authApi = {
   login: (email: string, password: string) =>
     api<{ user: SessionUser }>('/auth/login', { method: 'POST', body: { email, password } }),
   logout: () => api<{ ok: boolean }>('/auth/logout', { method: 'POST', silent401: true }),
-  register: (name: string, email: string, password: string) =>
+  register: (name: string, email: string, password: string, acceptTerms: boolean) =>
     api<{ message: string }>('/auth/register', {
       method: 'POST',
-      body: { name, email, password },
+      body: { name, email, password, acceptTerms },
     }),
   verifyEmail: (token: string) =>
     api<{ user: SessionUser }>('/auth/verify-email', { method: 'POST', body: { token } }),
@@ -66,6 +66,14 @@ export const addressesApi = {
   list: () => api<SavedAddress[]>('/addresses'),
   create: (input: AddressInput) => api<SavedAddress>('/addresses', { method: 'POST', body: input }),
   remove: (id: string) => api<{ deleted: true }>(`/addresses/${id}`, { method: 'DELETE' }),
+}
+
+// Direitos do titular (LGPD): sempre com a senha de novo.
+export const accountApi = {
+  exportData: (password: string) =>
+    api<Record<string, unknown>>('/account/export', { method: 'POST', body: { password } }),
+  deleteAccount: (password: string, confirm: string) =>
+    api<{ deleted: true }>('/account/delete', { method: 'POST', body: { password, confirm } }),
 }
 
 export const ordersApi = {

@@ -42,6 +42,11 @@ model User {
   passwordResetExpires     DateTime?
   // Incrementado no logout: invalida todas as sessões (JWTs) emitidas antes.
   tokenVersion             Int       @default(0)
+  // Aceite dos Termos de Uso e da Política de Privacidade no cadastro.
+  termsAcceptedAt          DateTime?
+  // Conta excluída a pedido do titular (LGPD): dados pessoais apagados; os pedidos
+  // ficam anônimos porque a loja precisa guardá-los (obrigação fiscal).
+  deletedAt                DateTime?
   // Verificação em duas etapas (TOTP), obrigatória para admins.
   // Segredos guardados criptografados (AES-256-GCM com TOTP_ENCRYPTION_KEY).
   totpSecretEnc            String?

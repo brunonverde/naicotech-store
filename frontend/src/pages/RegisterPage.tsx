@@ -10,6 +10,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null)
@@ -23,7 +24,7 @@ export function RegisterPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await authApi.register(name.trim(), email, password)
+      await authApi.register(name.trim(), email, password, acceptTerms)
       setRegisteredEmail(email.trim().toLowerCase())
     } catch (err) {
       setError((err as Error).message)
@@ -90,6 +91,13 @@ export function RegisterPage() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
+        </label>
+        <label className="checkbox">
+          <input type="checkbox" required checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
+          <span>
+            Li e aceito os <Link to="/termos" target="_blank">Termos de Uso</Link> e a{' '}
+            <Link to="/privacidade" target="_blank">Política de Privacidade</Link>
+          </span>
         </label>
         {error && <p className="alert alert-error">{error}</p>}
         <button type="submit" className="button" disabled={submitting}>

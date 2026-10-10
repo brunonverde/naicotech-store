@@ -1,5 +1,5 @@
 import { OrdersService } from '../src/orders/orders.service';
-import { insuredValue } from '../src/shipping/melhor-envio.client';
+import { insuredValue, redact } from '../src/shipping/melhor-envio.client';
 import { ShipmentsService } from '../src/shipping/shipments.service';
 import {
   ADDRESS,
@@ -53,6 +53,24 @@ describe('Frete, endereços e envio', () => {
         .post('/shipping/quote')
         .send({ postalCode: '22041001', items: [{ productId: product.id, quantity: 1, weightGrams: 1 }] })
         .expect(400);
+    });
+
+    it('reaproveita a mesma cotação por alguns minutos (não esgota a API do Melhor Envio)', async () => {
+      const product = await seedProduct(ctx);
+      const body = { postalCode: '22041001', items: [{ productId: product.id, quantity: 1 }] };
+      for (let i = 0; i < 3; i++) await ctx.http().post('/shipping/quote').send(body).expect(200);
+      expect(ctx.melhorEnvio.quotes).toHaveLength(1);
+
+      // Mudou o peso do produto: cota de novo.
+      await ctx.prisma.product.update({ where: { id: product.id }, data: { weightGrams: 3000 } });
+      await ctx.http().post('/shipping/quote').send(body).expect(200);
+      expect(ctx.melhorEnvio.quotes).toHaveLength(2);
+    });
+
+    it('não grava CPF, telefone ou e-mail nos logs de erro do Melhor Envio', () => {
+      expect(redact('O campo to.document 529.982.247-25 é inválido; email maria@x.com; tel (21) 98888-7777')).toBe(
+        'O campo to.document [número] é inválido; email [e-mail]; tel (21) [número]',
+      );
     });
 
     it('CEP sem cobertura devolve lista vazia', async () => {

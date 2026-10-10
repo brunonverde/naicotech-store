@@ -55,6 +55,10 @@ export interface LabelRequest {
   invoiceKey?: string;
 }
 
+// CPF, telefone, CEP e e-mail não vão para os logs.
+export const redact = (text: string) =>
+  text.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[e-mail]').replace(/\d[\d.\-/ ]{6,}\d/g, '[número]');
+
 /** Valor segurado do pacote: o total, ou no máximo R$ 1.000 sem nota fiscal. */
 export function insuredValue(total: number): number {
   const capped = isCommercialShipping() ? total : Math.min(total, NON_COMMERCIAL_INSURANCE_CAP);
@@ -227,8 +231,9 @@ export class MelhorEnvioClient {
       | null;
     if (!response.ok || data === null) {
       // Loga só as mensagens de erro, nunca o corpo enviado (tem dados pessoais).
-      const detail = data?.errors ? Object.values(data.errors).flat().join(' | ') : '';
-      this.logger.error(`Melhor Envio respondeu ${response.status} em ${path}: ${data?.message ?? ''} ${detail}`);
+      // E mascara números longos e e-mails, caso a API repita algum dado na mensagem.
+      const detail = redact(data?.errors ? Object.values(data.errors).flat().join(' | ') : '');
+      this.logger.error(`Melhor Envio respondeu ${response.status} em ${path}: ${redact(data?.message ?? '')} ${detail}`);
       if (response.status === 401) {
         throw new ServiceUnavailableException('Token do Melhor Envio inválido ou expirado (MELHOR_ENVIO_TOKEN).');
       }

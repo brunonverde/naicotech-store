@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MelhorEnvioClient } from './melhor-envio.client';
-import type { MeVolume, PackageItem } from './melhor-envio.client';
+import type { MeQuote, MeVolume, PackageItem } from './melhor-envio.client';
+
+const QUOTE_CACHE_MS = 10 * 60 * 1000;
+const QUOTE_CACHE_MAX = 1000;
 
 export interface CartLine {
   productId: string;
@@ -37,10 +40,30 @@ export function mergeLines(lines: CartLine[]): Map<string, number> {
 export class ShippingService {
   private readonly logger = new Logger(ShippingService.name);
 
+  // Cache curto das cotações: a mesma consulta (CEP + produtos com peso/preço atuais)
+  // não chama o Melhor Envio de novo. Evita que alguém esgote o limite da API
+  // repetindo cotações, e deixa o checkout mais rápido.
+  private readonly cache = new Map<string, { at: number; quotes: MeQuote[] }>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly melhorEnvio: MelhorEnvioClient,
   ) {}
+
+  private async cachedCalculate(postalCode: string, items: PackageItem[]) {
+    const key = JSON.stringify([postalCode, [...items].sort((a, b) => a.id.localeCompare(b.id))]);
+    const hit = this.cache.get(key);
+    if (hit && Date.now() - hit.at < QUOTE_CACHE_MS) return hit.quotes;
+
+    const quotes = await this.melhorEnvio.calculate(postalCode, items);
+    if (Array.isArray(quotes)) {
+      this.cache.delete(key);
+      this.cache.set(key, { at: Date.now(), quotes });
+      // Remove as mais antigas (o Map mantém a ordem de inserção).
+      while (this.cache.size > QUOTE_CACHE_MAX) this.cache.delete(this.cache.keys().next().value as string);
+    }
+    return quotes;
+  }
 
   /**
    * Cota o frete com peso, medidas e preço vindos do banco (nunca do navegador).
@@ -67,7 +90,7 @@ export class ShippingService {
       heightCm: p.heightCm,
     }));
 
-    const quotes = await this.melhorEnvio.calculate(postalCode, items);
+    const quotes = await this.cachedCalculate(postalCode, items);
     const options = (Array.isArray(quotes) ? quotes : [])
       // Serviços que não atendem o CEP ou o pacote voltam com "error" em vez de preço.
       .filter((q) => !q.error && (q.custom_price ?? q.price))

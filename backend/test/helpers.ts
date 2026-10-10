@@ -26,7 +26,8 @@ export interface SentMail {
     | 'password-changed'
     | 'security-alert'
     | 'order-shipped'
-    | 'order-delivered';
+    | 'order-delivered'
+    | 'account-deleted';
   subject?: string;
   to: string;
   link?: string;
@@ -56,6 +57,9 @@ export class FakeMailService {
   }
   async sendOrderDelivered(to: string, _name: string, order: { link: string }) {
     this.sent.push({ kind: 'order-delivered', to, link: order.link });
+  }
+  async sendAccountDeleted(to: string) {
+    this.sent.push({ kind: 'account-deleted', to });
   }
 
   last(kind: SentMail['kind'], to: string): SentMail | undefined {
@@ -240,7 +244,7 @@ export function agent(ctx: TestContext): TestAgent {
 
 // Cadastra, confirma o e-mail e devolve um agente já logado.
 export async function signUp(ctx: TestContext, email: string, name = 'Cliente Teste') {
-  await ctx.http().post('/auth/register').send({ name, email, password: PASSWORD }).expect(201);
+  await ctx.http().post('/auth/register').send({ name, email, password: PASSWORD, acceptTerms: true }).expect(201);
   const token = ctx.mail.tokenFrom('verification', email);
   const browser = agent(ctx);
   await browser.post('/auth/verify-email').send({ token }).expect(200);
