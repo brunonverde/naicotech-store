@@ -193,7 +193,7 @@ export function OrdersTab() {
                     {busy === o.id ? 'Gerando...' : 'Gerar etiqueta'}
                   </button>
                 )}
-                {hasLabel && (
+                {hasLabel && ['PAID', 'SHIPPED'].includes(o.status) && (
                   <button type="button" className="button button-ghost" disabled={busy === o.id} onClick={() => printLabel(o)}>
                     Imprimir etiqueta
                   </button>

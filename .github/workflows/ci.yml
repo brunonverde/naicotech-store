@@ -1,0 +1,64 @@
+# Roda os testes a cada push e pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (NestJS + testes e2e)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: naicotech
+          POSTGRES_PASSWORD: senha-so-do-ci
+          POSTGRES_DB: naicotech_store
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U naicotech"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Os testes criam e usam o banco naicotech_store_test (veja backend/test/test-env.ts).
+      # Os demais segredos são falsos e definidos em backend/test/setup-env.ts.
+      DATABASE_URL: postgresql://naicotech:senha-so-do-ci@localhost:5432/naicotech_store?schema=public
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx tsc --noEmit -p tsconfig.json
+      - run: npm run test:e2e
+
+  frontend:
+    name: Frontend (React + testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test

@@ -6,8 +6,7 @@ export function DemoNotice() {
   if (!STORE.demo) return null
   return (
     <div className="demo-notice" role="note">
-      <Info size={14} aria-hidden="true" /> Loja demonstrativa (projeto de portfólio): nenhuma compra é cobrada ou
-      entregue. Pagamentos em modo de teste.
+      <Info size={14} aria-hidden="true" /> Loja demonstrativa (projeto de portfólio): nenhuma compra é real.
     </div>
   )
 }

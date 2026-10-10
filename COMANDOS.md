@@ -42,6 +42,8 @@ Invoke-RestMethod -Uri "http://localhost:3000/auth/login" -Method Post -ContentT
 |---|---|
 | Aplicar uma mudança que você fez no `schema.prisma` | `npx prisma migrate dev --name nome_da_mudanca` |
 | Regenerar o client depois de mudar o schema (o migrate já faz isso sozinho, mas se der erro de tipo, roda de novo) | `npx prisma generate` |
+| Aplicar as migrações existentes (projeto recém-clonado, CI, produção) | `npx prisma migrate deploy` |
+| Popular o catálogo com produtos de exemplo (pode rodar de novo, não duplica) | `npm run seed` |
 | Ver os dados do banco numa interface visual no navegador | `npx prisma studio` |
 | Testar se a conexão com o banco está ok (lê o banco, não muda nada) | `npx prisma db pull` |
 
@@ -68,7 +70,7 @@ Todos esses rodam **dentro da pasta `backend/`**.
 
 **Registrar usuário:**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:3000/auth/register" -Method Post -ContentType "application/json" -Body '{"name":"Nome","email":"email@teste.com","password":"senha12345"}'
+Invoke-RestMethod -Uri "http://localhost:3000/auth/register" -Method Post -ContentType "application/json" -Body '{"name":"Nome","email":"email@teste.com","password":"senha12345","acceptTerms":true}'
 ```
 
 **Rota protegida (com a sessão):**
@@ -86,7 +88,13 @@ Invoke-RestMethod -Uri "http://localhost:3000/categories" -Method Post -ContentT
 
 ## 5. Promover um usuário a ADMIN
 
-Não existe rota pública pra isso (seria falha de segurança). Faz direto no banco:
+Não existe rota pública pra isso (seria falha de segurança). A conta precisa estar cadastrada e com o e-mail confirmado. Dentro de `backend/`:
+
+```powershell
+npm run make-admin -- email@aqui.com
+```
+
+Ou direto no banco:
 
 ```powershell
 docker exec -it naicotech-postgres psql -U naicotech -d naicotech_store

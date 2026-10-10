@@ -171,7 +171,9 @@ function DeleteAccount({ onDeleted }: { onDeleted: () => Promise<void> }) {
         <PasswordInput autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </label>
       <label>
-        Digite <strong>EXCLUIR</strong> para confirmar
+        <span>
+          Digite <strong>EXCLUIR</strong> para confirmar
+        </span>
         <input required value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
       </label>
       {error && <p className="alert alert-error">{error}</p>}

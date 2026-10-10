@@ -12,11 +12,11 @@ export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateReviewDto) {
-    // Só quem comprou (pedido PAID) pode avaliar o produto.
+    // Só quem comprou (pedido pago, enviado ou entregue) pode avaliar o produto.
     const purchase = await this.prisma.order.findFirst({
       where: {
         userId,
-        status: 'PAID',
+        status: { in: ['PAID', 'SHIPPED', 'DELIVERED'] },
         items: { some: { productId: dto.productId } },
       },
     });
