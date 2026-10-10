@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import {
   InvalidWebhookSignatureError,
@@ -5,45 +6,61 @@ import {
   Order as MpOrder,
   WebhookSignatureValidator,
 } from 'mercadopago';
+import type { CardType } from '../orders/dto/pay-order.dto';
+
+type MpOrderResponse = Awaited<ReturnType<MpOrder['get']>>;
+
+// Mesmo pedido + mesmo token (clique duplo) = mesma chave, sem cobrança duplicada.
+// Um cartão novo gera token novo, então uma nova tentativa após recusa não
+// reaproveita a resposta antiga. Formatado como UUID, que é o que a API espera.
+function idempotencyKey(orderId: string, cardToken: string): string {
+  const hex = createHash('sha256').update(`${orderId}:${cardToken}`).digest('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
 
 @Injectable()
 export class PaymentsService {
   private readonly client = new MercadoPagoConfig({
     accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN as string,
-    options: { timeout: 5000 },
+    options: { timeout: 15000 },
   });
   private readonly mpOrder = new MpOrder(this.client);
 
   async createPayment(params: {
     orderId: string;
-    amount: number;
+    amount: string;
     payerEmail: string;
     cardToken: string;
+    paymentMethodId: string;
+    paymentType: CardType;
+    installments: number;
   }) {
-    const amount = params.amount.toFixed(2);
+    // Débito é sempre à vista.
+    const installments = params.paymentType === 'debit_card' ? 1 : params.installments;
     return this.mpOrder.create({
       body: {
         type: 'online',
         processing_mode: 'automatic',
-        total_amount: amount,
+        total_amount: params.amount,
         external_reference: params.orderId,
         payer: { email: params.payerEmail },
         transactions: {
           payments: [
             {
-              amount,
+              amount: params.amount,
               payment_method: {
-                id: 'master',
-                type: 'credit_card',
+                id: params.paymentMethodId,
+                type: params.paymentType,
                 token: params.cardToken,
-                installments: 1,
+                installments,
               },
             },
           ],
         },
       },
-      // A mesma chave para o mesmo pedido evita cobrança duplicada.
-      requestOptions: { idempotencyKey: params.orderId },
+      requestOptions: {
+        idempotencyKey: idempotencyKey(params.orderId, params.cardToken),
+      },
     });
   }
 
@@ -51,17 +68,22 @@ export class PaymentsService {
     return this.mpOrder.get({ id });
   }
 
-  validateSignature(params: {
-    xSignature: string;
-    xRequestId: string;
-    dataId: string;
-  }): boolean {
+  isApproved(order: MpOrderResponse): boolean {
+    return (
+      order.status === 'processed' &&
+      order.transactions?.payments?.[0]?.status_detail === 'accredited'
+    );
+  }
+
+  validateSignature(params: { xSignature: string; xRequestId: string; dataId: string }): boolean {
     try {
       WebhookSignatureValidator.validate({
         xSignature: params.xSignature,
         xRequestId: params.xRequestId,
         dataId: params.dataId.toLowerCase(),
         secret: process.env.MERCADOPAGO_WEBHOOK_SECRET as string,
+        // Rejeita notificações antigas reenviadas por terceiros (replay).
+        toleranceSeconds: 900,
       });
       return true;
     } catch (error) {

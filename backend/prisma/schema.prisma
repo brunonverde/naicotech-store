@@ -32,8 +32,31 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(CUSTOMER)
+  // null = e-mail ainda não confirmado; login bloqueado.
+  emailVerifiedAt          DateTime?
+  // Guardamos só o hash SHA-256 do token enviado por e-mail.
+  verificationTokenHash    String?   @unique
+  verificationTokenExpires DateTime?
+  // Recuperação de senha: também só o hash do token, válido por 1 hora.
+  passwordResetTokenHash   String?   @unique
+  passwordResetExpires     DateTime?
+  // Incrementado no logout: invalida todas as sessões (JWTs) emitidas antes.
+  tokenVersion             Int       @default(0)
+  // Verificação em duas etapas (TOTP), obrigatória para admins.
+  // Segredos guardados criptografados (AES-256-GCM com TOTP_ENCRYPTION_KEY).
+  totpSecretEnc            String?
+  totpPendingSecretEnc     String?
+  totpEnabledAt            DateTime?
+  // Último intervalo de 30s aceito: impede reutilizar o mesmo código.
+  totpLastStep             Int?
+  totpFailedAttempts       Int       @default(0)
+  totpLockedUntil          DateTime?
+  // Hash SHA-256 dos códigos de recuperação ainda não usados.
+  totpRecoveryHashes       String[]  @default([])
   orders       Order[]
   reviews      Review[]
+  auditLogs    AdminAuditLog[]
+  addresses    Address[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -54,6 +77,11 @@ model Product {
   stock       Int         @default(1)
   costPrice   Decimal?    @db.Decimal(10, 2)
   images      String[]    @default([])
+  // Pacote pronto para envio (caixa + proteção), usado na cotação do frete.
+  weightGrams Int         @default(1000)
+  lengthCm    Int         @default(20)
+  widthCm     Int         @default(15)
+  heightCm    Int         @default(10)
   category    Category    @relation(fields: [categoryId], references: [id])
   categoryId  String
   orderItems  OrderItem[]
@@ -67,11 +95,56 @@ model Order {
   user        User        @relation(fields: [userId], references: [id])
   userId      String
   status      OrderStatus @default(PENDING)
+  // Total = produtos + frete.
   totalAmount Decimal     @db.Decimal(10, 2)
   paymentId   String?
   items       OrderItem[]
+
+  // Frete escolhido (sempre recotado no servidor ao criar o pedido).
+  shippingPrice        Decimal       @default(0) @db.Decimal(10, 2)
+  shippingServiceId    Int?
+  shippingServiceName  String?
+  shippingCompany      String?
+  shippingDeliveryDays Int?
+  // Só cidade/UF e CEP parcial; o endereço completo fica criptografado em OrderAddress.
+  shippingSummary      String?
+  shippingAddress      OrderAddress?
+  // Etiqueta no Melhor Envio e rastreio.
+  shipmentId           String?       @unique
+  shipmentStatus       String?
+  // Chave da NF-e (44 dígitos), quando a loja tiver CNPJ e envio comercial.
+  invoiceKey           String?
+  trackingCode         String?
+  shippedAt            DateTime?
+  deliveredAt          DateTime?
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+}
+
+// Endereço salvo para próximas compras (só com o consentimento do cliente).
+// Todos os dados pessoais ficam num único JSON criptografado com AES-256-GCM
+// (ADDRESS_ENCRYPTION_KEY) e amarrado ao dono: copiar o texto para outra conta não funciona.
+model Address {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  dataEnc   String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Cópia criptografada do endereço de entrega do pedido. Fica numa tabela à parte
+// para nunca sair junto com o pedido por engano, e é apagada depois da entrega
+// + prazo de troca (LGPD: guardar só enquanto for necessário).
+model OrderAddress {
+  orderId   String   @id
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  dataEnc   String
+  createdAt DateTime @default(now())
 }
 
 model OrderItem {
@@ -95,4 +168,18 @@ model Review {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+}
+
+// Registro de tudo que admins fazem (e das tentativas de entrar no painel).
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  action    String
+  target    String?
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

@@ -13,5 +13,14 @@ services:
     volumes:
       - naicotech_pg_data:/var/lib/postgresql/data
 
+  # Captura os e-mails enviados em dev. Caixa de entrada: http://localhost:8025
+  mail:
+    image: axllent/mailpit:v1.27
+    container_name: naicotech-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   naicotech_pg_data:

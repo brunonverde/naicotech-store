@@ -1,5 +1,7 @@
 import {
+  ArrayMaxSize,
   IsArray,
+  IsUrl,
   IsEnum,
   IsInt,
   IsNumber,
@@ -8,6 +10,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -40,9 +43,36 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(10)
+  // Só https: bloqueia javascript:, data: e http (conteúdo misto).
+  @IsUrl({ protocols: ['https'], require_protocol: true }, { each: true })
   images?: string[];
 
   @IsUUID()
   categoryId: string;
+
+  // Pacote pronto para envio (caixa + proteção). Limites dos Correios: 30 kg, 100 cm por lado.
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(30_000)
+  weightGrams?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  lengthCm?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  widthCm?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  heightCm?: number;
 }

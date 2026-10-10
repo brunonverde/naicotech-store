@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -58,6 +58,13 @@ export class ProductsService {
 
   async remove(id: string) {
     await this.findOne(id);
+    // Produto já vendido fica no histórico dos pedidos: em vez de apagar, zere o estoque.
+    const sold = await this.prisma.orderItem.count({ where: { productId: id } });
+    if (sold > 0) {
+      throw new ConflictException(
+        'Este produto já aparece em pedidos e não pode ser apagado. Zere o estoque para tirá-lo de venda.',
+      );
+    }
     await this.prisma.product.delete({ where: { id } });
     return { deleted: true };
   }
