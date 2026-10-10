@@ -9,6 +9,8 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const maskEmail = (address: string) => address.replace(/^(.)[^@]*/, '$1•••');
+
 interface ActionEmail {
   to: string;
   name: string;
@@ -170,6 +172,7 @@ export class MailService {
       </div>`;
 
     await this.transporter.sendMail({ from: this.from, to: email.to, subject: email.subject, text, html });
-    this.logger.log(`E-mail "${email.subject}" enviado para ${email.to}`);
+    // E-mail é dado pessoal: no log, só a primeira letra e o domínio.
+    this.logger.log(`E-mail "${email.subject}" enviado para ${maskEmail(email.to)}`);
   }
 }

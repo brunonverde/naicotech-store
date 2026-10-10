@@ -1,4 +1,6 @@
-import { CARD, createTestApp, makeAdmin, orderBody, PASSWORD, seedProduct, signUp } from './helpers';
+import { AuditService } from '../src/admin/audit.service';
+import { decryptIp, maskIp } from '../src/security/ip';
+import { CARD, createTestApp, makeAdmin, orderBody, PASSWORD, seedProduct, signUp, signUpAdmin } from './helpers';
 import type { TestContext } from './helpers';
 
 describe('Conta e LGPD (exportar e excluir dados)', () => {
@@ -17,6 +19,35 @@ describe('Conta e LGPD (exportar e excluir dados)', () => {
     await signUp(ctx, 'a@teste.com');
     const user = await ctx.prisma.user.findUniqueOrThrow({ where: { email: 'a@teste.com' } });
     expect(user.termsAcceptedAt).not.toBeNull();
+  });
+
+  describe('IP (auditoria do painel)', () => {
+    it('guarda o IP só criptografado, mostra mascarado e apaga depois de 6 meses', async () => {
+      const { browser: admin } = await signUpAdmin(ctx);
+      const rows = await ctx.prisma.adminAuditLog.findMany();
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row.ipEnc).toMatch(/^v1:/);
+        expect(row.ipEnc).not.toMatch(/127\.0\.0\.1|::1|ffff/);
+      }
+      expect(decryptIp(rows[0].ipEnc!)).toMatch(/127\.0\.0\.1|::1/);
+
+      const log = await admin.get('/admin/audit-log').expect(200);
+      expect(JSON.stringify(log.body)).not.toMatch(/ipEnc|127\.0\.0\.1/);
+      expect(log.body[0].ip).toMatch(/•••/);
+
+      const audit = ctx.app.get(AuditService);
+      expect(await audit.purgeOldIps()).toBe(0);
+      await ctx.prisma.adminAuditLog.updateMany({ data: { createdAt: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000) } });
+      expect(await audit.purgeOldIps()).toBe(rows.length);
+      expect(await ctx.prisma.adminAuditLog.count({ where: { ipEnc: { not: null } } })).toBe(0);
+    });
+
+    it('mascara IPv4 e IPv6', () => {
+      expect(maskIp('189.45.10.200')).toBe('189.45.•••.•••');
+      expect(maskIp('::ffff:189.45.10.200')).toBe('189.45.•••.•••');
+      expect(maskIp('2804:14c:abcd:1::5')).toBe('2804:14c:•••');
+    });
   });
 
   describe('exportação', () => {

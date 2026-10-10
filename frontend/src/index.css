@@ -2698,3 +2698,65 @@ label.shipping-option:hover {
   justify-content: space-between;
   gap: 0.5rem;
 }
+
+/* ---------- Aviso de cookies ---------- */
+.cookie-banner {
+  position: fixed;
+  z-index: 50;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-width: 520px;
+  padding: 1.1rem 1.2rem;
+  display: grid;
+  gap: 0.7rem;
+  box-shadow: var(--shadow), var(--glow);
+  animation: fade-in 0.3s var(--ease);
+}
+
+.cookie-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cookie-banner h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cookie-banner p {
+  margin: 0;
+}
+
+.cookie-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cookie-options .checkbox {
+  align-items: flex-start;
+}
+
+.cookie-options small {
+  display: block;
+}
+
+.cookie-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.footer-link {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}

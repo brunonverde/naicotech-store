@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Cpu, CreditCard, Lock, ShieldCheck } from 'lucide-react'
 import { STORE } from '../config/store'
+import { useConsent } from '../context/ConsentContext'
 
 const YEAR = new Date().getFullYear()
 
 export function Footer() {
+  const { openPreferences } = useConsent()
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
@@ -61,6 +63,11 @@ export function Footer() {
             </li>
             <li>
               <Link to="/trocas">Trocas e devoluções</Link>
+            </li>
+            <li>
+              <button type="button" className="link-button footer-link" onClick={openPreferences}>
+                Preferências de cookies
+              </button>
             </li>
           </ul>
         </div>

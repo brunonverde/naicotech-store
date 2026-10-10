@@ -28,3 +28,4 @@ process.env.SHIPPING_SENDER_STATE = 'RJ';
 delete process.env.SHIPPING_SERVICES;
 delete process.env.SHIPPING_AGENCIES;
 delete process.env.SHIPPING_COMMERCIAL;
+process.env.IP_ENCRYPTION_KEY = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';

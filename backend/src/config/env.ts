@@ -33,8 +33,13 @@ export function validateEnv() {
   if (!/^[0-9a-f]{64}$/i.test(addressKey)) {
     fail('ADDRESS_ENCRYPTION_KEY precisa ter 64 caracteres hexadecimais (veja o .env.example)');
   }
-  if (addressKey.toLowerCase() === totpKey.toLowerCase()) {
-    fail('ADDRESS_ENCRYPTION_KEY precisa ser diferente da TOTP_ENCRYPTION_KEY');
+  const ipKey = required('IP_ENCRYPTION_KEY');
+  if (!/^[0-9a-f]{64}$/i.test(ipKey)) {
+    fail('IP_ENCRYPTION_KEY precisa ter 64 caracteres hexadecimais (veja o .env.example)');
+  }
+  // Uma chave por finalidade: vazar uma não abre os dados das outras.
+  if (new Set([totpKey, addressKey, ipKey].map((k) => k.toLowerCase())).size !== 3) {
+    fail('TOTP_ENCRYPTION_KEY, ADDRESS_ENCRYPTION_KEY e IP_ENCRYPTION_KEY precisam ser diferentes');
   }
 
   required('MELHOR_ENVIO_TOKEN');

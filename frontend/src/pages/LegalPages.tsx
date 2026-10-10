@@ -72,7 +72,8 @@ export function PrivacyPage() {
           publicar.
         </li>
         <li>
-          <strong>Segurança:</strong> endereço IP nas ações do painel administrativo e limites de tentativas de login.
+          <strong>Segurança:</strong> endereço IP das ações feitas no painel administrativo, guardado criptografado.
+          O controle de tentativas de login usa o IP só na memória do servidor, por poucos minutos, sem gravar.
         </li>
       </ul>
       <p>
@@ -117,20 +118,34 @@ export function PrivacyPage() {
         <li>Conta e endereços salvos: até você excluir.</li>
         <li>Endereço de entrega de um pedido: apagado automaticamente 90 dias após a entrega (30 dias se cancelado).</li>
         <li>Pedidos: pelo prazo fiscal (5 anos), sem dados que identifiquem você se a conta for excluída.</li>
+        <li>
+          IP dos registros de acesso ao painel: 6 meses, como exige o Marco Civil da Internet (art. 15), e depois apagado.
+        </li>
       </ul>
 
       <h2>6. Como protegemos</h2>
       <ul>
         <li>Conexão criptografada (HTTPS) e cookies de sessão inacessíveis ao JavaScript da página.</li>
-        <li>Endereços, CPF e telefone guardados criptografados (AES-256-GCM) no banco de dados.</li>
+        <li>Endereços, CPF, telefone e IPs guardados criptografados (AES-256-GCM), cada tipo com uma chave própria.</li>
+        <li>Registros do servidor (logs) sem dados pessoais: e-mails e documentos aparecem mascarados.</li>
         <li>O site mostra endereços sempre mascarados; o completo só é usado para gerar a etiqueta.</li>
         <li>Painel administrativo com verificação em duas etapas obrigatória e registro de todas as ações.</li>
       </ul>
 
       <h2>7. Cookies</h2>
+      <ul>
+        <li>
+          <strong>Essenciais (sempre ativos):</strong> o cookie de sessão (mantém você logado), o do painel administrativo
+          e a sua própria escolha sobre cookies. Na página de pagamento, o Mercado Pago usa recursos de antifraude
+          necessários para aprovar o cartão com segurança.
+        </li>
+        <li>
+          <strong>Opcional:</strong> lembrar o carrinho neste navegador entre visitas. Só é usado se você permitir.
+        </li>
+      </ul>
       <p>
-        Usamos apenas cookies essenciais: o de sessão (mantém você logado) e o do painel administrativo. O carrinho fica
-        salvo no seu próprio navegador. Não há cookies de rastreamento ou publicidade.
+        Não usamos cookies de publicidade, de rastreamento ou de análise. Você muda sua escolha a qualquer momento em
+        “Preferências de cookies”, no rodapé; ao recusar, o carrinho salvo é apagado na hora.
       </p>
 
       <h2>8. Seus direitos</h2>

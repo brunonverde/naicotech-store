@@ -183,7 +183,9 @@ model AdminAuditLog {
   action    String
   target    String?
   details   Json?
-  ip        String?
+  // IP de quem fez a ação, criptografado (IP_ENCRYPTION_KEY). Guardado por 6 meses
+  // (Marco Civil da Internet, art. 15) e depois apagado.
+  ipEnc     String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])

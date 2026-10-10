@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { OrderStatus } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
+import { decryptIp, maskIp } from '../security/ip';
 import { ShipmentsService } from '../shipping/shipments.service';
 
 // Mudanças de status que o admin pode fazer. PENDING expira sozinho, PAID vem do
@@ -51,11 +52,17 @@ export class AdminService {
     return this.prisma.order.findUniqueOrThrow({ where: { id } });
   }
 
-  auditLog() {
-    return this.prisma.adminAuditLog.findMany({
+  // O painel mostra o IP só mascarado; o completo fica criptografado no banco
+  // para investigar um incidente, se preciso (veja docs/SEGURANCA.md).
+  async auditLog() {
+    const rows = await this.prisma.adminAuditLog.findMany({
       include: { user: { select: { name: true, email: true } } },
       orderBy: { createdAt: 'desc' },
       take: 200,
+    });
+    return rows.map(({ ipEnc, ...row }) => {
+      const ip = ipEnc ? decryptIp(ipEnc) : null;
+      return { ...row, ip: ip ? maskIp(ip) : null };
     });
   }
 }

@@ -21,10 +21,13 @@ import { AdminPage } from './pages/admin/AdminPage'
 import { AccountPage } from './pages/AccountPage'
 import { PrivacyPage, ReturnsPage, TermsPage } from './pages/LegalPages'
 import { DemoNotice } from './components/DemoNotice'
+import { CookieBanner } from './components/CookieBanner'
+import { ConsentProvider } from './context/ConsentContext'
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ConsentProvider>
       <AuthProvider>
         <CartProvider>
           <ToastProvider>
@@ -88,9 +91,11 @@ export default function App() {
             </RouteErrorBoundary>
           </main>
           <Footer />
+          <CookieBanner />
           </ToastProvider>
         </CartProvider>
       </AuthProvider>
+      </ConsentProvider>
     </BrowserRouter>
   )
 }

@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { AuthProvider } from '../context/AuthContext'
 import { CartProvider } from '../context/CartContext'
+import { CONSENT_KEY, CONSENT_VERSION, ConsentProvider } from '../context/ConsentContext'
 import { mockFetch } from '../test/fetch-mock'
 import { CartPage } from './CartPage'
 
@@ -16,19 +17,22 @@ const OPTIONS = [
 const renderCart = () =>
   render(
     <MemoryRouter initialEntries={['/carrinho']}>
-      <AuthProvider>
-        <CartProvider>
-          <Routes>
-            <Route path="/carrinho" element={<CartPage />} />
-            <Route path="/pedidos/:id" element={<p>Página do pedido</p>} />
-          </Routes>
-        </CartProvider>
-      </AuthProvider>
+      <ConsentProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Routes>
+              <Route path="/carrinho" element={<CartPage />} />
+              <Route path="/pedidos/:id" element={<p>Página do pedido</p>} />
+            </Routes>
+          </CartProvider>
+        </AuthProvider>
+      </ConsentProvider>
     </MemoryRouter>,
   )
 
 describe('checkout com frete', () => {
   beforeEach(() => {
+    localStorage.setItem(CONSENT_KEY, JSON.stringify({ version: CONSENT_VERSION, decidedAt: '', cart: true }))
     localStorage.setItem(
       'naicotech.cart',
       JSON.stringify([{ productId: 'p1', name: 'RTX 5060 Ti', price: '100.00', image: '', stock: 3, quantity: 1 }]),

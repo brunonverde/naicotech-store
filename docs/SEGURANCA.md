@@ -14,7 +14,9 @@ Resumo das proteções, do que ainda falta para uma operação real e do que faz
 | Pagamento | Cartão tokenizado pelo Mercado Pago; valor sempre do banco; webhook assinado, anti-replay e idempotente |
 | Frete | Preço recotado no servidor; cache de cotações; CEP validado antes de chamar serviços externos (sem SSRF) |
 | Dados pessoais | Endereço/CPF/telefone com AES-256-GCM e AAD ligado ao dono; API só devolve versões mascaradas; logs sem dados pessoais |
-| LGPD | Consentimento para salvar endereço; exportação e exclusão de conta com senha; apagamento automático de endereços antigos |
+| LGPD | Consentimento para salvar endereço e para guardar o carrinho no navegador (aviso de cookies com escolha granular); exportação e exclusão de conta com senha; apagamento automático de endereços antigos |
+| IP | Guardado só no registro de auditoria do painel, criptografado com chave própria, exibido mascarado e apagado após 6 meses (Marco Civil, art. 15); rate limit usa o IP só em memória |
+| Logs | Sem dados pessoais: e-mails, CPF e telefones mascarados |
 | Configuração | Backend não sobe com segredo ausente, de exemplo ou fraco; chaves de criptografia separadas por finalidade |
 | Testes | Testes e2e cobrindo IDOR, adulteração de preço, replay, CSRF, força bruta, criptografia e exclusão de conta |
 
@@ -47,7 +49,7 @@ Resumo das proteções, do que ainda falta para uma operação real e do que faz
 4. Se o servidor foi invadido, tire-o do ar (ou bloqueie o acesso externo) antes de investigar.
 
 ### Primeiras 24 horas: entender
-5. Descubra **o que** foi acessado e **de quem**: auditoria do painel (`AdminAuditLog`), logs do backend, logs da hospedagem e do banco.
+5. Descubra **o que** foi acessado e **de quem**: auditoria do painel (`AdminAuditLog`, com o IP completo descriptografável pela `IP_ENCRYPTION_KEY` via `decryptIp` em `backend/src/security/ip.ts`), logs do backend, logs da hospedagem e do banco.
 6. Confira no Mercado Pago e no Melhor Envio se houve cobranças, estornos ou etiquetas estranhas.
 7. Corrija a falha que permitiu o incidente e adicione um teste que a reproduza.
 
@@ -72,4 +74,5 @@ Resumo das proteções, do que ainda falta para uma operação real e do que faz
 | `MELHOR_ENVIO_TOKEN` | Revogar e gerar outro no painel | Nenhum para o cliente |
 | Senha do banco | Trocar no Postgres e no `DATABASE_URL` | Reinício do backend |
 | `TOTP_ENCRYPTION_KEY` | Exige reconfigurar o 2FA dos admins (os segredos antigos não abrem mais) | Admins refazem o 2FA |
+| `IP_ENCRYPTION_KEY` | Gerar nova; IPs antigos deixam de abrir (aparecem vazios no painel) | Perde-se só o IP dos registros antigos |
 | `ADDRESS_ENCRYPTION_KEY` | Exige migrar: descriptografar com a antiga e criptografar com a nova (formato `v1:` permite versionar) | Sem migração, endereços salvos somem da tela |

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Product } from '../api/types'
+import { readConsent, useConsent } from './ConsentContext'
 
 // O preço aqui é só para exibição; o valor cobrado é calculado no backend.
 export interface CartItem {
@@ -25,7 +26,9 @@ interface CartContextValue {
 const CART_KEY = 'naicotech.cart'
 const CartContext = createContext<CartContextValue | null>(null)
 
+// Só lê o carrinho salvo se a pessoa permitiu guardá-lo neste navegador.
 function loadCart(): CartItem[] {
+  if (!readConsent()?.cart) return []
   try {
     const raw = localStorage.getItem(CART_KEY)
     return raw ? (JSON.parse(raw) as CartItem[]) : []
@@ -36,14 +39,18 @@ function loadCart(): CartItem[] {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart)
+  const { consent } = useConsent()
+  const remember = Boolean(consent?.cart)
 
   useEffect(() => {
     try {
-      localStorage.setItem(CART_KEY, JSON.stringify(items))
+      // Sem consentimento o carrinho vive só enquanto a aba estiver aberta, e o salvo é apagado.
+      if (remember) localStorage.setItem(CART_KEY, JSON.stringify(items))
+      else localStorage.removeItem(CART_KEY)
     } catch {
       // Sem persistência; o carrinho continua funcionando enquanto a aba estiver aberta.
     }
-  }, [items])
+  }, [items, remember])
 
   const add = useCallback((product: Product, quantity = 1) => {
     setItems((current) => {

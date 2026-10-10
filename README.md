@@ -19,7 +19,7 @@ Loja virtual de hardware e acessórios. Frontend em React + Vite + TypeScript. B
      ```
    - `MERCADOPAGO_ACCESS_TOKEN`: painel do Mercado Pago, credenciais de teste.
    - `MERCADOPAGO_WEBHOOK_SECRET`: ao configurar o webhook, copie a chave secreta (gere uma nova, a antiga estava no PC formatado).
-   - `TOTP_ENCRYPTION_KEY` e `ADDRESS_ENCRYPTION_KEY`: duas chaves **diferentes**, cada uma gerada com
+   - `TOTP_ENCRYPTION_KEY`, `ADDRESS_ENCRYPTION_KEY` e `IP_ENCRYPTION_KEY`: três chaves **diferentes**, cada uma gerada com
      `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
    - `MELHOR_ENVIO_TOKEN`: painel do Melhor Envio (sandbox) > Gerenciar > Tokens. `SHIPPING_ORIGIN_CEP` é o CEP de onde os pacotes saem; os dados `SHIPPING_SENDER_*` só são exigidos para gerar etiqueta.
 2. Suba o banco (Docker Desktop aberto):
@@ -86,6 +86,8 @@ Mais comandos do dia a dia: `COMANDOS.md`.
 - Em "Minha conta" o cliente baixa todos os seus dados (JSON) e exclui a conta, sempre confirmando a senha.
 - A exclusão apaga dados pessoais, endereços e avaliações; pedidos ficam anônimos (obrigação fiscal).
 - Cadastro registra o aceite dos Termos e da Política de Privacidade. Páginas legais em `/privacidade`, `/termos` e `/trocas`.
+- Aviso de cookies com escolha granular: só cookies essenciais por padrão; guardar o carrinho no navegador é opcional e revogável.
+- IP guardado só na auditoria do painel, criptografado (`IP_ENCRYPTION_KEY`), mostrado mascarado e apagado após 6 meses. Logs sem e-mails ou documentos.
 
 Detalhes, plano de resposta a incidentes e rotação de chaves: [`docs/SEGURANCA.md`](docs/SEGURANCA.md).
 
