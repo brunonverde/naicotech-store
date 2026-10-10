@@ -9,7 +9,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-const maskEmail = (address: string) => address.replace(/^(.)[^@]*/, '$1•••');
+export const maskEmail = (address: string) => address.replace(/^(.)[^@]*/, '$1•••');
 
 interface ActionEmail {
   to: string;

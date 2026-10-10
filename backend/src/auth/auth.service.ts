@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
+import { MailService, maskEmail } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -242,7 +242,8 @@ export class AuthService {
   // resposta não denuncia se a conta existe. Falhas ficam no log; a pessoa pode pedir de novo.
   private deliver(kind: string, email: string, send: () => Promise<void>) {
     send().catch((error) =>
-      this.logger.error(`Falha ao enviar e-mail de ${kind} para ${email}`, error as Error),
+      // E-mail é dado pessoal: no log, mascarado (como no MailService).
+      this.logger.error(`Falha ao enviar e-mail de ${kind} para ${maskEmail(email)}`, error as Error),
     );
   }
 }

@@ -1,5 +1,5 @@
 import { OrdersService } from '../src/orders/orders.service';
-import { CARD, createTestApp, orderBody, seedProduct, signUp, signWebhook } from './helpers';
+import { CARD, createTestApp, orderBody, seedProduct, signUp, signUpAdmin, signWebhook } from './helpers';
 import type { TestContext } from './helpers';
 
 describe('Pedidos e pagamentos', () => {
@@ -70,6 +70,16 @@ describe('Pedidos e pagamentos', () => {
       await bia.get(`/orders/${order.body.id}`).expect(404);
       await bia.post(`/orders/${order.body.id}/pay`).send(CARD('approved-1')).expect(404);
       expect((await bia.get('/orders')).body).toHaveLength(0);
+    });
+
+    it('admin também não vê pedido de cliente pela rota de cliente (só pelo painel, com 2FA)', async () => {
+      const ana = await signUp(ctx, 'ana@teste.com');
+      const product = await seedProduct(ctx);
+      const order = await ana.post('/orders').send(orderBody(product.id, 1));
+
+      const { browser: admin } = await signUpAdmin(ctx);
+      await admin.get(`/orders/${order.body.id}`).expect(404);
+      await ana.get(`/orders/${order.body.id}`).expect(200);
     });
   });
 

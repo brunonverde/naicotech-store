@@ -32,6 +32,6 @@ export class ReviewsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Req() req: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
-    return this.reviewsService.remove(id, req.user.sub, req.user.role);
+    return this.reviewsService.remove(id, req.user.sub);
   }
 }

@@ -4,3 +4,5 @@ node_modules/
 dist/
 backend/src/generated/
 *.log
+docs/security-audit/*.html
+docs/security-audit/preview/

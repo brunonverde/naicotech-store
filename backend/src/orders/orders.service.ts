@@ -149,10 +149,11 @@ export class OrdersService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async findOne(id: string, userId: string, role: string) {
+  async findOne(id: string, userId: string) {
     const order = await this.prisma.order.findUnique({ where: { id }, include: orderInclude, omit: orderOmit });
     // 404 também para pedido de outra pessoa: não confirma que o ID existe.
-    if (!order || (order.userId !== userId && role !== 'ADMIN')) {
+    // Sem exceção para ADMIN: o painel usa /admin/orders, que exige a 2ª etapa e audita.
+    if (!order || order.userId !== userId) {
       throw new NotFoundException('Pedido não encontrado');
     }
     return order;

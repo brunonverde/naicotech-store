@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { CARD, createTestApp, orderBody, PASSWORD, seedProduct, signUp } from './helpers';
 import type { TestContext } from './helpers';
 
@@ -191,5 +192,22 @@ describe('Autenticação', () => {
       .send({ ...CARD('approved-1'), payerEmail: 'atacante@x.com' })
       .expect(400); // campo extra é rejeitado
     expect(ctx.payments.calls).toHaveLength(0);
+  });
+
+  it('falha no envio de e-mail não grava o endereço completo no log', async () => {
+    await signUp(ctx, EMAIL);
+    ctx.mail.sendPasswordReset = async () => {
+      throw new Error('SMTP fora do ar');
+    };
+    const errors = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    try {
+      await ctx.http().post('/auth/forgot-password').send({ email: EMAIL }).expect(200);
+      await vi.waitFor(() => expect(errors).toHaveBeenCalled());
+      const logged = errors.mock.calls.map((call) => String(call[0])).join('\n');
+      expect(logged).toContain('c•••@teste.com');
+      expect(logged).not.toContain(EMAIL);
+    } finally {
+      errors.mockRestore();
+    }
   });
 });

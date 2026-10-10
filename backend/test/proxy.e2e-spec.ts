@@ -1,9 +1,10 @@
+import { testSecret } from '../src/config/env';
 import { createTestApp } from './helpers';
 import type { TestContext } from './helpers';
 
 // Deploy com o frontend no Vercel: a API só aceita o que passa pelo proxy dele.
 describe('API atrás do proxy do frontend (PROXY_SECRET)', () => {
-  const SECRET = 'segredo-do-proxy-com-mais-de-32-caracteres';
+  const SECRET = testSecret('PROXY_SECRET');
   let ctx: TestContext;
 
   beforeEach(async () => {

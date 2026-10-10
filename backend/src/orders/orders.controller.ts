@@ -33,7 +33,7 @@ export class OrdersController {
 
   @Get(':id')
   findOne(@Req() req: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
-    return this.ordersService.findOne(id, req.user.sub, req.user.role);
+    return this.ordersService.findOne(id, req.user.sub);
   }
 
   @Post(':id/pay')
