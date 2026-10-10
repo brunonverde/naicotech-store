@@ -54,15 +54,31 @@ export function validateEnv() {
     fail('FRONTEND_URL inválida');
   }
 
+  const proxySecret = process.env.PROXY_SECRET;
+  if (proxySecret !== undefined && proxySecret.length < 32) {
+    fail('PROXY_SECRET precisa de pelo menos 32 caracteres');
+  }
+
   if (isProduction()) {
     if (!frontendUrl.startsWith('https://')) fail('Em produção, FRONTEND_URL precisa ser https');
-    if (process.env.MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-')) {
-      fail('Em produção, use o access token de produção do Mercado Pago');
-    }
-    if (isMelhorEnvioSandbox()) {
-      fail('Em produção, defina MELHOR_ENVIO_SANDBOX=false e use o token de produção do Melhor Envio');
+    if (isDemoMode()) {
+      // Demonstração pública (portfólio): roda como produção (HTTPS, cookie Secure),
+      // mas obrigatoriamente com pagamento e frete de teste. Nada é cobrado de verdade.
+      if (!isMelhorEnvioSandbox()) fail('DEMO_MODE exige MELHOR_ENVIO_SANDBOX=true');
+    } else {
+      if (process.env.MERCADOPAGO_ACCESS_TOKEN?.startsWith('TEST-')) {
+        fail('Em produção, use o access token de produção do Mercado Pago');
+      }
+      if (isMelhorEnvioSandbox()) {
+        fail('Em produção, defina MELHOR_ENVIO_SANDBOX=false e use o token de produção do Melhor Envio');
+      }
     }
   }
+}
+
+/** Demonstração pública do portfólio: produção com credenciais de teste. */
+export function isDemoMode() {
+  return process.env.DEMO_MODE === 'true';
 }
 
 /**

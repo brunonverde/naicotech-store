@@ -9,6 +9,7 @@ Resumo das proteções, do que ainda falta para uma operação real e do que faz
 | Senhas | bcrypt (12 rounds); respostas que não revelam se um e-mail existe |
 | Sessão | JWT em cookie `httpOnly` + `SameSite=Strict` (+ `Secure` em produção); versão da sessão conferida no banco a cada requisição |
 | Navegador | CSP com nonce, helmet, CORS fechado, CSRF por origem + corpo JSON |
+| Deploy (Vercel + Render) | A API só aceita chamadas do middleware do Vercel (PROXY_SECRET, comparação em tempo constante); o IP do visitante vem do Vercel e não pode ser forjado pelo navegador |
 | Abuso | Rate limit por IP em todas as rotas, mais rígido em login, cadastro, pagamento, cotação e LGPD |
 | Painel admin | 2FA TOTP obrigatório, sessão própria de 30 min, bloqueio após 5 erros, auditoria de todas as ações |
 | Pagamento | Cartão tokenizado pelo Mercado Pago; valor sempre do banco; webhook assinado, anti-replay e idempotente |

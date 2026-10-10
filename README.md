@@ -14,7 +14,7 @@ Loja virtual full-stack de hardware gamer: catálogo, carrinho, **pagamento com 
 <details>
 <summary><b>English summary</b></summary>
 
-Full-stack e-commerce for PC hardware (React 19 + NestJS + PostgreSQL/Prisma). Card payments via Mercado Pago, real-time shipping quotes and label purchase via Melhor Envio (Brazilian carriers), order tracking with e-mail notifications, and an admin panel with mandatory TOTP 2FA and audit log. Security and privacy first: httpOnly cookie sessions with server-side revocation, CSRF protection, nonce-based CSP, rate limiting, AES-256-GCM encryption of personal data (addresses, IPs, 2FA secrets), data export/account deletion (Brazil's LGPD), and 139 automated tests running on CI.
+Full-stack e-commerce for PC hardware (React 19 + NestJS + PostgreSQL/Prisma). Card payments via Mercado Pago, real-time shipping quotes and label purchase via Melhor Envio (Brazilian carriers), order tracking with e-mail notifications, and an admin panel with mandatory TOTP 2FA and audit log. Security and privacy first: httpOnly cookie sessions with server-side revocation, CSRF protection, nonce-based CSP, rate limiting, AES-256-GCM encryption of personal data (addresses, IPs, 2FA secrets), data export/account deletion (Brazil's LGPD), and 144 automated tests running on CI.
 </details>
 
 ## Telas
@@ -55,7 +55,7 @@ Mais: [catálogo com filtros](docs/screenshots/02-catalogo.png).
 - **Dados pessoais criptografados:** endereço, CPF, telefone, IP e segredos de 2FA com AES-256-GCM, uma chave por finalidade e dado amarrado ao dono (copiar o valor para outra conta não abre). A API só devolve endereços mascarados.
 - **Sessões revogáveis:** JWT em cookie `httpOnly` + `SameSite=Strict`, conferido no banco a cada requisição; sair ou trocar a senha derruba todas as sessões.
 - **LGPD de ponta a ponta:** consentimento granular de cookies, aceite dos termos registrado, exportação e exclusão de conta, apagamento automático de endereços e IPs após o prazo, logs sem dados pessoais.
-- **Testes:** 103 testes e2e no backend (contra um PostgreSQL de verdade, com Mercado Pago, Melhor Envio e e-mail simulados) e 36 no frontend, rodando no GitHub Actions.
+- **Testes:** 105 testes e2e no backend (contra um PostgreSQL de verdade, com Mercado Pago, Melhor Envio e e-mail simulados) e 39 no frontend, rodando no GitHub Actions.
 
 Detalhes de segurança, riscos conhecidos e plano de resposta a incidentes: [`docs/SEGURANCA.md`](docs/SEGURANCA.md).
 
@@ -121,7 +121,7 @@ Requisitos: Node.js 24, Docker Desktop.
 
 5. **Admin:** crie uma conta pelo site, confirme o e-mail e rode `npm run make-admin -- seu@email.com` em `backend/`. No primeiro acesso a `/admin`, o painel pede para configurar o app autenticador.
 
-Cartões de teste do Mercado Pago e outros comandos: [`COMANDOS.md`](COMANDOS.md).
+Cartões de teste do Mercado Pago e outros comandos: [`COMANDOS.md`](COMANDOS.md). Para publicar uma demo online grátis (Vercel + Render + Neon): [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Testes
 

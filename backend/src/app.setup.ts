@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { allowedOrigins } from './config/env';
 import { csrfProtection } from './security/csrf.middleware';
+import { trustedProxy } from './security/trusted-proxy.middleware';
 
 // Middlewares e pipes da API. Usado pelo main.ts e pelos testes e2e,
 // para os testes rodarem com exatamente as mesmas proteções de produção.
@@ -15,6 +16,10 @@ export function configureApp(app: NestExpressApplication) {
     app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
   }
   app.disable('x-powered-by');
+
+  // Atrás do proxy do frontend (deploy no Vercel): só aceita o que vem dele.
+  // Primeiro de tudo, antes de qualquer outra coisa olhar o IP.
+  if (process.env.PROXY_SECRET) app.use(trustedProxy(process.env.PROXY_SECRET));
 
   // A API só devolve JSON: CSP mínima e headers de segurança padrão do helmet.
   app.use(

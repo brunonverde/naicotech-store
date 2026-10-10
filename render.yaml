@@ -1,0 +1,61 @@
+# Backend da demonstração no Render (plano grátis). Passo a passo em docs/DEPLOY.md.
+# Variáveis com "sync: false" são pedidas no painel do Render na primeira vez (segredos).
+services:
+  - type: web
+    name: naicotech-api
+    runtime: node
+    plan: free
+    # Mesma região do banco no Neon (AWS us-east-1) para as consultas serem rápidas.
+    region: virginia
+    rootDir: backend
+    # --include=dev: a CLI do Nest e o Prisma são dependências de desenvolvimento.
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
+    # Aplica migrações e garante o catálogo de exemplo a cada início (idempotente).
+    startCommand: npx prisma migrate deploy && npm run seed -- --force && node dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # Demonstração: produção com pagamento e frete de teste (nada é cobrado).
+      - key: DEMO_MODE
+        value: "true"
+      - key: MELHOR_ENVIO_SANDBOX
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      # O mesmo valor vai no Vercel: a API só aceita requisições que passam por lá.
+      - key: PROXY_SECRET
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      - key: ADDRESS_ENCRYPTION_KEY
+        sync: false
+      - key: IP_ENCRYPTION_KEY
+        sync: false
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        sync: false
+      - key: MELHOR_ENVIO_TOKEN
+        sync: false
+      - key: MELHOR_ENVIO_USER_AGENT
+        sync: false
+      - key: SHIPPING_ORIGIN_CEP
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
